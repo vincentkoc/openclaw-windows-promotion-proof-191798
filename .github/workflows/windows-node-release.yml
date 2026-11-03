@@ -281,7 +281,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.workflow_sha }}
-          sparse-checkout: scripts
+          sparse-checkout: |
+            scripts
+            fixture
           persist-credentials: false
       - name: Setup trusted Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -305,6 +307,7 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+          NODE_OPTIONS: --import=./fixture/upload-cancel-barrier.mjs
         run: |
           node scripts/windows-release-promotion.mjs publish --approval "$env:RUNNER_TEMP/windows-release-approval/approval.json" --assets dist
           if ($LASTEXITCODE -ne 0) { throw "Windows release publication failed." }

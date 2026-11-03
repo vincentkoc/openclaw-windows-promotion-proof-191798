@@ -15,7 +15,7 @@ The synthetic release tag is `v2099.1.1-beta.1`, a non-latest prerelease. No npm
 
 ## Source provenance
 
-| Repo-relative source file | Source SHA-256 | Fixture SHA-256 |
+| Repo-relative source file | Source SHA-256 | Original fixture SHA-256 |
 | --- | --- | --- |
 | `scripts/windows-release-promotion.mjs` | `d2df946ba2dfe81f8707f35c8e4c313b8f04465796d669a523dbe9836824cf36` | `d2df946ba2dfe81f8707f35c8e4c313b8f04465796d669a523dbe9836824cf36` |
 | `scripts/release-approval-receipt.mjs` | `0cd525d0007d118cb9be9468929f9bbbe8edcbdb17110319520364ecccc2072f` | `71f8d67951920e928a2a2334ca80b1a5f487c6595c5001ebe55f1f7e6a89476e` |
@@ -56,3 +56,13 @@ The synthetic release tag is `v2099.1.1-beta.1`, a non-latest prerelease. No npm
        - name: Verify promoted release asset contract
          shell: pwsh
 ```
+
+## Admitted-writer cancellation fixture (D)
+
+This separate fixture extends original commit `3ab64ad3e633de600712037b2cbbfa832900733e`. The original `main`, signed tag `v2099.1.1-beta.1`, and its three published assets remain unchanged. The five production scripts retain the original fixture hashes above, including the single repository-constant relocation. They also remain unchanged in source PR commit `edf691b4dbda17133fdc88b7cdd1b894404140d3`, which repairs only prepared-handoff test fixtures and their test-line allocation.
+
+D uses a separate signed prerelease, `v2099.1.1-beta.2`, with a fresh public fixture signer. Both parent and child execute the same frozen `release-publish/<fixture-sha-prefix>-41636427241` tooling tag. The synthetic parent verifies this new signed tag, creates real receipts, and attests the Windows projection with `source: null`.
+
+Only the Windows publication step loads `fixture/upload-cancel-barrier.mjs` through `NODE_OPTIONS`; its checkout includes the fixture directory. The preload forwards real subprocess calls unchanged. After the first successful real arm64 upload, it creates one public `proof-barrier/<child-run>-1` branch at the executing fixture SHA, logs UTC start and deadline, and pauses for 90 seconds outside the upload subprocess timeout. The pause then releases normally if GitHub has not cancelled the run. It does not fabricate API responses, approval, identity, or upload success.
+
+The controller must observe the marker, the approved writer running, and exactly one complete arm64 asset with the approved size and digest before cancelling that exact child. Acceptance requires the writer's GitHub cancellation completion timestamp and observation of the terminal cancelled run before the logged deadline, with no second installer or manifest. The original positive assets must retain their IDs, sizes, and digests. This tests platform cancellation after admission and one completed write; it does not claim helper execution after termination, rollback, or interruption during an upload. A missed deadline, instrumentation error, or unexpected write invalidates the probe.
