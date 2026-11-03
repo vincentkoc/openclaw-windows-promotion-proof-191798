@@ -1,0 +1,73 @@
+name: Sandbox Release Publish Approval
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  publish:
+    name: Publish plugins, then OpenClaw
+    runs-on: ubuntu-latest
+    environment: npm-release
+    timeout-minutes: 10
+    steps:
+      - name: Checkout frozen sandbox tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup trusted Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24.22.1"
+      - name: Verify synthetic signed release tag
+        id: tag
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_WORKFLOW_SHA"
+          test "$(git rev-parse 'refs/tags/v2099.1.1-beta.1^{}')" = "$GITHUB_WORKFLOW_SHA"
+          test "$(git cat-file -t refs/tags/v2099.1.1-beta.1)" = tag
+          git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile=fixture/allowed_signers verify-tag v2099.1.1-beta.1
+          echo "signed_tag_object_sha=$(git rev-parse refs/tags/v2099.1.1-beta.1)" >> "$GITHUB_OUTPUT"
+      - name: Write release approval receipt
+        id: approval_receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: v2099.1.1-beta.1
+          TARGET_SHA: ${{ github.workflow_sha }}
+          RELEASE_NPM_DIST_TAG: beta
+        run: |
+          node scripts/release-approval-receipt.mjs create --output "$RUNNER_TEMP/openclaw-release-approval/approval.json"
+      - name: Attest release approval receipt
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ runner.temp }}/openclaw-release-approval/approval.json
+      - name: Upload release approval receipt
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ steps.approval_receipt.outputs.artifact_name }}
+          path: ${{ runner.temp }}/openclaw-release-approval/approval.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Write Windows release approval
+        env:
+          SIGNED_RELEASE_TAG_OBJECT_SHA: ${{ steps.tag.outputs.signed_tag_object_sha }}
+        run: |
+          node scripts/windows-release-promotion.mjs create --receipt "$RUNNER_TEMP/openclaw-release-approval/approval.json" --output "$RUNNER_TEMP/windows-release-approval/approval.json"
+      - name: Attest Windows release approval
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ runner.temp }}/windows-release-approval/approval.json
+      - name: Upload Windows release approval
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-release-approval-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/windows-release-approval/approval.json
+          if-no-files-found: error
+          retention-days: 30
