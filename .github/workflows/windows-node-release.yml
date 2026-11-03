@@ -312,12 +312,6 @@ jobs:
           node scripts/windows-release-promotion.mjs publish --approval "$env:RUNNER_TEMP/windows-release-approval/approval.json" --assets dist
           if ($LASTEXITCODE -ne 0) { throw "Windows release publication failed." }
 
-      - name: Sandbox proof intentional post-upload failure
-        if: ${{ github.run_attempt == 1 }}
-        shell: pwsh
-        run: |
-          throw "Sandbox proof: all three uploads completed; intentionally fail attempt one before readback."
-
       - name: Verify promoted release asset contract
         shell: pwsh
         env:

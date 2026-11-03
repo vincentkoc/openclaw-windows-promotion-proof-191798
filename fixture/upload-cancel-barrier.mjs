@@ -3,7 +3,7 @@ import { syncBuiltinESMExports } from "node:module";
 import { basename } from "node:path";
 
 const repository = "vincentkoc/openclaw-windows-promotion-proof-191798";
-const releaseTag = "v2099.1.1-beta.2";
+const releaseTag = "v2099.1.1-beta.3";
 const originalExecFileSync = childProcess.execFileSync;
 let barrierUsed = false;
 
