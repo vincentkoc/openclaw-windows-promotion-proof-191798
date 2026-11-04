@@ -3,16 +3,16 @@ import { syncBuiltinESMExports } from "node:module";
 import { basename } from "node:path";
 
 const repository = "vincentkoc/openclaw-windows-promotion-proof-191798";
-const releaseTag = "v2099.1.1-beta.4";
+const releaseTag = "v2099.1.1-beta.5";
 const originalExecFileSync = childProcess.execFileSync;
-let failureInjected = false;
+let barrierUsed = false;
 
 childProcess.execFileSync = function (file, args, options) {
-  // Keep real subprocess behavior; inject only after the first upload succeeds.
+  // The real upload must finish successfully before instrumentation starts.
+  // Original subprocess arguments, options, return values and errors pass through.
   const result = Reflect.apply(originalExecFileSync, this, arguments);
   if (
-    failureInjected ||
-    process.env.GITHUB_RUN_ATTEMPT !== "1" ||
+    barrierUsed ||
     file !== "gh" ||
     !Array.isArray(args) ||
     args[0] !== "release" ||
@@ -25,25 +25,52 @@ childProcess.execFileSync = function (file, args, options) {
     return result;
   }
 
+  barrierUsed = true;
   const env = process.env;
+  const sha = env.GITHUB_WORKFLOW_SHA;
+  const runId = env.GITHUB_RUN_ID;
+  const attempt = env.GITHUB_RUN_ATTEMPT;
   if (
     env.GITHUB_REPOSITORY !== repository ||
     env.RELEASE_TAG !== releaseTag ||
-    !/^[a-f0-9]{40}$/u.test(env.GITHUB_WORKFLOW_SHA ?? "") ||
-    !/^[1-9][0-9]*$/u.test(env.GITHUB_RUN_ID ?? "")
+    !/^[a-f0-9]{40}$/u.test(sha ?? "") ||
+    !/^[1-9][0-9]*$/u.test(runId ?? "") ||
+    attempt !== "1"
   ) {
-    throw new Error("Invalid isolated F fixture identity; proof is invalid.");
+    throw new Error("Invalid isolated D fixture identity; proof is invalid.");
   }
-  failureInjected = true;
+
+  const markerRef = `refs/heads/proof-barrier/${runId}-${attempt}`;
+  originalExecFileSync(
+    "gh",
+    [
+      "api",
+      `repos/${repository}/git/refs`,
+      "--method",
+      "POST",
+      "-f",
+      `ref=${markerRef}`,
+      "-f",
+      `sha=${sha}`,
+    ],
+    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 30_000 },
+  );
+  const started = Date.now();
   console.log(
-    "WINDOWS_PROOF_PARTIAL_UPLOAD " +
+    "WINDOWS_PROOF_BARRIER " +
       JSON.stringify({
-        runId: env.GITHUB_RUN_ID,
-        attempt: env.GITHUB_RUN_ATTEMPT,
-        fixtureSha: env.GITHUB_WORKFLOW_SHA,
-        completedAt: new Date().toISOString(),
+        runId,
+        attempt,
+        fixtureSha: sha,
+        markerRef,
+        startedAt: new Date(started).toISOString(),
+        deadline: new Date(started + 90_000).toISOString(),
       }),
   );
-  throw new Error("WINDOWS_PROOF_F_INTENTIONAL_FAILURE_AFTER_ARM64_UPLOAD");
+  // Outside the upload subprocess timeout. Without real GitHub cancellation,
+  // this finite pause returns the original success and publication continues.
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 90_000);
+  console.log("WINDOWS_PROOF_BARRIER_RELEASED " + new Date().toISOString());
+  return result;
 };
 syncBuiltinESMExports();

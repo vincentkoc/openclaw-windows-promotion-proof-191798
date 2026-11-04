@@ -86,3 +86,21 @@ The publication-step-only preload retains its historical filename `fixture/uploa
 The controller records the failed upload step, distinctive error, original validation artifact, and exactly one complete arm64 asset with its approved size and digest before retrying. It reruns only failed jobs once on the same child and fixture SHA, observes the renewed protected-writer approval, and requires the successful validation job to retain its original timestamps and artifact ID. Writer attempt 2 must download that original artifact, complete all three asset uploads, and pass the native target asset/manifest/checksum readback. Final installer API digests must match the source pins. The original publisher stays successful at attempt 1 throughout; it is never rerun or cancelled.
 
 F proves recovery from a completed one-asset partial release with a still-valid original publisher approval. It does not prove interruption during an individual upload, atomic publication, rollback, instantaneous cancellation, or recovery with E's superseded approval. Native Authenticode remains a pre-upload validation; final target readback verifies names and checksums.
+
+## Simplified production source: current E/F qualification
+
+The historical cases above retain their original source identities. This separate fixture qualifies the simplified production source at OpenClaw PR commit `b18a8dea941961407189ce4f7ddf67bde03ba300`, tree `88b24def2e5278e2d8af149c01ebffe98430a8a5`. The original publisher ID/attempt and installer selection remain inputs; actual executing GitHub ref and workflow SHA bind the approval, while its attested target and signed tag determine the candidate. The existing current-parent verifier owns parent policy. Native read-only validation owns bytes, and the writer consumes the immutable artifact by exact ID with digest mismatch set to error. Attestation runs once per process; live authority remains checked before each upload.
+
+Current E uses signed candidate `v2099.1.1-beta.5`, the unchanged finite E preload except for this candidate, a synthetic parent with real approval/receipts/attestations, and explicit source-null late attachment. After one real arm64 upload, the controller advances only this parent to attempt 2 before the finite pause expires. The pause must release normally and the real helper must deny the next upload with the exact parent runAttempt mismatch. The child is not cancelled on a passing path; only the waiting parent attempt 2 is cancelled after evidence.
+
+The five production files below are copied from the new source, with only the receipt repository constant relocated. The Windows workflow is copied from that source with only sparse checkout of `fixture` and `NODE_OPTIONS` on the publication step. No old intentional post-upload failure step is present. Previous releases, refs, markers and assets remain unchanged. This is namespace-relocated integration with a synthetic publisher/signing trust root, not the complete production publisher. Uploads remain sequential and non-atomic; these cases do not prove individual-upload interruption, instantaneous revocation or rollback.
+
+| Source path | Source SHA-256 | Fixture SHA-256 |
+| --- | --- | --- |
+| `scripts/windows-release-promotion.mjs` | `9e32a7e0d060953fa45a7b76d650e722535ebe0e98e7a279ddc3688351389fe3` | `9e32a7e0d060953fa45a7b76d650e722535ebe0e98e7a279ddc3688351389fe3` |
+| `scripts/release-approval-receipt.mjs` | `0cd525d0007d118cb9be9468929f9bbbe8edcbdb17110319520364ecccc2072f` | `71f8d67951920e928a2a2334ca80b1a5f487c6595c5001ebe55f1f7e6a89476e` |
+| `scripts/release-tooling-identity.mjs` | `24ea8464f4e90c1c1b895c2e20828b700c33b89faa75d5a4505b46b1e9cbcf5b` | `24ea8464f4e90c1c1b895c2e20828b700c33b89faa75d5a4505b46b1e9cbcf5b` |
+| `scripts/lib/actions-artifact-archive.mjs` | `4dd54803c889b984c551a57513210a7a07d21f9da93bc163b61b0ae59ffb782e` | `4dd54803c889b984c551a57513210a7a07d21f9da93bc163b61b0ae59ffb782e` |
+| `scripts/lib/record-shared.mjs` | `f7485a3b947b5cac2192369fbbd9a6c1e26493b734978609b5941b6dd5cbcc84` | `f7485a3b947b5cac2192369fbbd9a6c1e26493b734978609b5941b6dd5cbcc84` |
+
+Source Windows workflow SHA-256: `b921cecac44eefd60fdf543d698ab5a7f409966bb38e599f30ae8eeb1e16addc`.

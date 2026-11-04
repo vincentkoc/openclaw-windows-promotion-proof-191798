@@ -31,15 +31,15 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_WORKFLOW_SHA"
-          test "$(git rev-parse 'refs/tags/v2099.1.1-beta.4^{}')" = "$GITHUB_WORKFLOW_SHA"
-          test "$(git cat-file -t refs/tags/v2099.1.1-beta.4)" = tag
-          git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile=fixture/allowed_signers verify-tag v2099.1.1-beta.4
-          echo "signed_tag_object_sha=$(git rev-parse refs/tags/v2099.1.1-beta.4)" >> "$GITHUB_OUTPUT"
+          test "$(git rev-parse 'refs/tags/v2099.1.1-beta.5^{}')" = "$GITHUB_WORKFLOW_SHA"
+          test "$(git cat-file -t refs/tags/v2099.1.1-beta.5)" = tag
+          git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile=fixture/allowed_signers verify-tag v2099.1.1-beta.5
+          echo "signed_tag_object_sha=$(git rev-parse refs/tags/v2099.1.1-beta.5)" >> "$GITHUB_OUTPUT"
       - name: Write release approval receipt
         id: approval_receipt
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: v2099.1.1-beta.4
+          RELEASE_TAG: v2099.1.1-beta.5
           TARGET_SHA: ${{ github.workflow_sha }}
           RELEASE_NPM_DIST_TAG: beta
         run: |

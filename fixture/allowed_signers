@@ -2,3 +2,4 @@ proof-fixture@example.invalid ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDoI8NYx286Gez
 proof-fixture@example.invalid ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFtvpglKaaFLWNilRmA39HM5N1KgZ1bN9LUgOcI/FGAK windows-proof-191798-d
 proof-fixture@example.invalid ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPpiPfOKBLCrCOytmIqMNn3610lcIAwXmh9cV/G35Jub windows-proof-191798-e
 proof-fixture@example.invalid ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFxIzLfgEm0VnSx08/ZEFBpA4XJOh+F4vy8v2csPr7Ci windows-proof-191798-f
+windows-proof-191798-simplified ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFPSxmIZGHfJng0hq0K4jP80OIfS287OGrv6VoNKgq9D windows-proof-191798-simplified
