@@ -1,0 +1,4 @@
+{
+  "openclawNpmTarball": "https://example.invalid/synthetic-openclaw.tgz",
+  "openclawNpmIntegrity": "sha512-synthetic-fixture"
+}
