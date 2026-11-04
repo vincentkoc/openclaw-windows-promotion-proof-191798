@@ -104,3 +104,11 @@ The five production files below are copied from the new source, with only the re
 | `scripts/lib/record-shared.mjs` | `f7485a3b947b5cac2192369fbbd9a6c1e26493b734978609b5941b6dd5cbcc84` | `f7485a3b947b5cac2192369fbbd9a6c1e26493b734978609b5941b6dd5cbcc84` |
 
 Source Windows workflow SHA-256: `b921cecac44eefd60fdf543d698ab5a7f409966bb38e599f30ae8eeb1e16addc`.
+
+## Simplified source: partial-release retry (current F)
+
+Current F extends fixture `e7a98da822b703bc76e1124f2446e7435ec4dfcd` without changing any of the five production files or the Windows workflow. It uses separate signed candidate `v2099.1.1-beta.6`, an empty non-latest prerelease and its own lightweight tooling tag. The same task-only public signer authorizes the synthetic candidate; the private key remains local and is removed after hosted verification.
+
+The preload is the previously exercised F instrumentation with only the candidate changed. It forwards real subprocess calls and throws the distinctive failure only after the first successful arm64 upload on child attempt 1. There is no pause, marker or parent mutation. Before one failed-jobs-only retry, the controller records the one-asset inventory and original validation artifact ID, digest, created_at, expired=false and execution timestamps. Attempt 2 passes through normally, receives actual renewed writer approval, downloads that original artifact and must complete all three uploads and native target checksum readback. The original publisher remains successful at attempt 1.
+
+Current E remains separate denial evidence with its superseded parent; F does not recover E or reuse its approval. Prior resources remain intact. This qualifies completed-one-asset recovery with valid original authority, not interruption during an individual upload, atomicity, rollback or instantaneous cancellation.
